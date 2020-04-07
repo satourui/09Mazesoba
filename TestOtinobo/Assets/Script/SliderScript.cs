@@ -15,13 +15,11 @@ public class SliderScript : MonoBehaviour
     void Start()
     { 
         slider = GameObject.Find("SteamSlider").GetComponent<Slider>();//スライダーを探す
-        Debug.Log(steampoint);
     }
 
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(steampoint);
         steampoint = script.SteamPoint;
         slider.value = steampoint;//値によって変動させる
     }
