@@ -13,6 +13,17 @@ public class PlayerScript : MonoBehaviour
     //メインカメラの当たり判定
     [SerializeField, Header("プレイヤーを追跡するカメラ")] Camera Maincamera;
 
+
+    #region//インスペクターで設定する
+    [Header("ジャンプ速度")] public float jumpSpeed;
+    [Header("ジャンプする高さ")] public float jumpHeight;
+    [Header("ジャンプする長さ")] public float jumpLimitTime;
+    [Header("ジャンプの速さ表現")] public AnimationCurve jumpCurve;
+    [Header("踏みつけ判定の高さの割合")] public float stepOnRate;
+    #endregion
+
+
+
     //プレイヤーのHPとそれを表示するテキストの指定
     [SerializeField] Text HPtext;
     public int Hp;
@@ -43,7 +54,17 @@ public class PlayerScript : MonoBehaviour
     private Vector2 gravity;
 
     private bool parasolFlag;　//傘が開いているか閉じているか判定
-    private bool damageFlag;　//ダメージを受けているか判定
+    private bool damageFlag; //ダメージを受けているか判定
+
+    private bool isJump = false;
+    private float jumpPos = 0.0f;
+    private bool isOtherJump=false;
+    private float jumpTime;
+    private float otherJumpHeight = 0.0f;
+    private bool isDown = false;
+    private BoxCollider2D capcol = null;
+    private bool isGround = false;
+    private bool isHead = false;
 
     private void Awake()
     {
@@ -59,6 +80,7 @@ public class PlayerScript : MonoBehaviour
         HPtext.text = string.Format("HP: {0}", Hp);
         Utext.text = string.Format("潤い: {0}", Rain);
         SteamText.text = string.Format("\n{0}/3",TextSteampoint);
+        capcol = GetComponent<BoxCollider2D>();
         FadeManager.FadeIn();
     }
 
@@ -85,26 +107,27 @@ public class PlayerScript : MonoBehaviour
         transform.rotation = new Quaternion(transform.rotation.x, transform.rotation.y, 0.0f, transform.rotation.w);
         float axis = Input.GetAxis("Horizontal");
         Vector2 velocity = rig2D.velocity;
-
+        float ySpeed = GetYSpeed();
         //プレイヤーが動いていたらaxisの値に5かけて動かす
         if (axis != 0)
         {
             velocity.x = axis * 5;
         }
-        rig2D.velocity = velocity;
-
+        rig2D.velocity = new Vector2(velocity.x,ySpeed);
+        
         //ジャンプ(Spaceキー)が押されたら傘のフラグを変える
-        if (Input.GetButtonDown("Jump"))
-        {
-            if (parasolFlag)
-            {
-                parasolFlag = false;
-            }
-            else if (!parasolFlag)
-            {
-                parasolFlag = true;
-            }
-        }
+        //if (Input.GetButtonDown("Jump"))
+
+        //{
+        //    if (parasolFlag)
+        //    {
+        //        parasolFlag = false;
+        //    }
+        //    else if (!parasolFlag)
+        //    {
+        //        parasolFlag = true;
+        //    }
+        //}
 
         //ダメージを受けたら一定時間無敵にして点滅させる
         if (damageFlag)
@@ -167,6 +190,41 @@ public class PlayerScript : MonoBehaviour
             Hp--;
             HPtext.text = string.Format("HP: {0}", Hp);
         }
+        
+        if (other.collider.tag == "Enemy")
+        {
+            //踏みつけ判定になる高さ
+            float stepOnHeight = (capcol.size.y * (stepOnRate / 100f));
+            //踏みつけ判定のワールド座標
+            float judgePos = transform.position.y - (capcol.size.y / 2f) + stepOnHeight;
+            Debug.Log("接触したよ");
+            foreach (ContactPoint2D p in other.contacts)
+            {
+                if (p.point.y < judgePos)
+                {
+                    EnemyJump o = other.gameObject.GetComponent<EnemyJump>();
+                    if (o != null)
+                    {
+                        otherJumpHeight = o.boundHeight;    //踏んづけたものから跳ねる高さを取得する
+                        o.playerjump = true;        //踏んづけたものに対して踏んづけた事を通知する
+                        jumpPos = transform.position.y; //ジャンプした位置を記録する 
+                        isOtherJump = true;
+                        isJump = false;
+                        jumpTime = 0.0f;
+                        Debug.Log("ジャンプしたよ");
+                    }
+                    else
+                    {
+                        Debug.Log("ObjectCollisionが付いてないよ!");
+                    }
+                }
+                else
+                {
+                    isDown = true;
+                    break;
+                }
+            }
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -174,6 +232,7 @@ public class PlayerScript : MonoBehaviour
         //当たった相手のタグがEnemyかつダメージを受けていない状態なら、無敵にしてHpを減らす
         if (other.tag == "Enemy" && !damageFlag)
         {
+            Debug.Log("HIr");
             //潤いが一定以上ならタグを変更して敵を倒せるようにする
             if (tag == "RPlayer")
             {
@@ -213,6 +272,8 @@ public class PlayerScript : MonoBehaviour
             TextSteampoint = (int)SteamPoint / 20;
             SteamText.text = string.Format("\n{0}/3", TextSteampoint);
         }
+
+
     }
 
     private void OnTriggerStay2D(Collider2D other)
@@ -255,5 +316,29 @@ public class PlayerScript : MonoBehaviour
     {
         FadeManager.FadeOut(1);
     }
+    private float GetYSpeed()
+    {
 
+        float ySpeed = gravity.y;
+
+        //何かを踏んだ際のジャンプ
+        if (isOtherJump)
+        {
+            if (jumpPos + otherJumpHeight > transform.position.y && jumpTime < jumpLimitTime && !isHead)
+            {
+                ySpeed = jumpSpeed;
+                jumpTime += Time.deltaTime;
+
+            }
+            else
+            {
+                isOtherJump = false;
+                jumpTime = 0.0f;
+            }
+        }
+     
+
+       
+        return ySpeed;
+    }
 }
