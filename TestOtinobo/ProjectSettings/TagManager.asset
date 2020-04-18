@@ -12,6 +12,7 @@ TagManager:
   - Searchcol
   - DGround
   - Ground
+  - HighEnemy
   layers:
   - Default
   - TransparentFX

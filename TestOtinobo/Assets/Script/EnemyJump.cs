@@ -19,6 +19,9 @@ public class EnemyJump : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if(playerjump==true)
+        {
+            Destroy(gameObject);
+        }
     }
 }

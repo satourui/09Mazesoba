@@ -12,7 +12,7 @@ public class EnemyScript : MonoBehaviour
     [SerializeField] GameObject player;
     private bool encountFlag;//プレイヤーを発見したか
     Vector3 playerPos;//プレイヤーの現在位置
-    float Enemy_Move_Speed = 0.05f;//追跡速度
+    float Enemy_Move_Speed = 0f;//追跡速度
     //float ChaseTime = 180f;
 
     //死んだときになる音を鳴らせるオブジェクト

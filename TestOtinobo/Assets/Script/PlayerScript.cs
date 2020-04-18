@@ -38,6 +38,9 @@ public class PlayerScript : MonoBehaviour
     int TextSteampoint;
     //大雨降っているかどうか
     private bool steamFallflag;
+    public int score = 0;//スコアの追加　(4/17)
+    public int AddPoint = 100;//普通のスコア加算
+    public int HighPoint = 200;//スコア加算の高いポイント
     //大雨が降っている時間
     //private int steamTime = 120;
 
@@ -82,6 +85,7 @@ public class PlayerScript : MonoBehaviour
         SteamText.text = string.Format("\n{0}/3",TextSteampoint);
         capcol = GetComponent<BoxCollider2D>();
         FadeManager.FadeIn();
+        score=0;
     }
 
     private void FixedUpdate()
@@ -191,7 +195,7 @@ public class PlayerScript : MonoBehaviour
             HPtext.text = string.Format("HP: {0}", Hp);
         }
         
-        if (other.collider.tag == "Enemy")
+        if (other.collider.tag == "Enemy"|| other.collider.tag == "HighEnemy")
         {
             //踏みつけ判定になる高さ
             float stepOnHeight = (capcol.size.y * (stepOnRate / 100f));
@@ -212,6 +216,14 @@ public class PlayerScript : MonoBehaviour
                         isJump = false;
                         jumpTime = 0.0f;
                         Debug.Log("ジャンプしたよ");
+                        if(other.collider.tag=="Enemy")
+                        {
+                          score += AddPoint / 2;//スコアを足す(4/17)
+                        }
+                        else
+                        {
+                            score += HighPoint / 2;
+                        }
                     }
                     else
                     {
@@ -225,6 +237,7 @@ public class PlayerScript : MonoBehaviour
                 }
             }
         }
+
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -253,7 +266,6 @@ public class PlayerScript : MonoBehaviour
                 HPtext.text = string.Format("HP: {0}", Hp);
             }
         }
-
 
         //ゴールと接触したら
         if (other.tag == "Goal")
