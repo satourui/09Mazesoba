@@ -55,6 +55,7 @@ public class PlayerScript : MonoBehaviour
 
     private bool parasolFlag;　//傘が開いているか閉じているか判定
     private bool damageFlag; //ダメージを受けているか判定
+    private bool isDeadFlag; //死亡フラグ
 
     private bool isJump = false;
     private float jumpPos = 0.0f;
@@ -136,6 +137,12 @@ public class PlayerScript : MonoBehaviour
             MainSpriteRenderer.color = new Color(1f, 1f, 1f, level);
         }
 
+        //死亡時のフラグ(エフェクトなど追々追加)
+        if(isDeadFlag)
+        {
+            SceneManager.LoadScene(0);
+        }
+
         //HPがゼロになったらやり直し
         if (Hp <= 0)
         {
@@ -184,6 +191,12 @@ public class PlayerScript : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D other)
     {
+        if(other.gameObject.tag == "Ground")
+        {
+            //プレイヤー死亡
+            isDeadFlag = true;
+        }
+
         if(other.gameObject.tag == "DGround")
         {
             OnDamegeEffect();
@@ -212,6 +225,7 @@ public class PlayerScript : MonoBehaviour
                         isJump = false;
                         jumpTime = 0.0f;
                         Debug.Log("ジャンプしたよ");
+                        Camera.main.gameObject.GetComponent<CameraScritpt>().Shake();
                     }
                     else
                     {
